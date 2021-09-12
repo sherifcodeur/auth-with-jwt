@@ -41,8 +41,9 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCr
 
 // routes
 
-// applying userAuth middleware to all get routes
+// applying userAuth middleware to all get and post routes
 app.get('*', userAuth);
+app.post('*', userAuth);
 
 // non protected routes
 app.get('/', (req, res) => res.render('home'));

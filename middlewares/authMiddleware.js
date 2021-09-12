@@ -64,7 +64,7 @@ const userAuth = (req,res,next)=>{
 
             // the token is not verified we set the user data to null
             if(err){
-                console.log("pass ici 1");
+                
                 res.locals.user = null;
                 next();
 
@@ -81,7 +81,7 @@ const userAuth = (req,res,next)=>{
     // the token doesn't exist we set user data to null
     }else{
 
-        console.log("pass 2");
+        
         res.locals.user = null;
 
         next();

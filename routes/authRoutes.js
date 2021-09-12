@@ -17,6 +17,8 @@ router.get('/login',authControllers.login_get);
 router.post('/login',authControllers.login_post);
 router.get('/logout',authControllers.logout_get);
 
+router.get('/verify/:verify',authControllers.verify_get);
+
 
 // exports all the routes with router
 module.exports = {router};

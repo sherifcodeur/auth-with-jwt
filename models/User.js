@@ -29,6 +29,12 @@ const userSchema = new Schema({
 
     },
 
+    validated : {
+
+        type:Boolean,
+        default:false,
+    }
+
 },
     
     

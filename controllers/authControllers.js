@@ -6,14 +6,19 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 
-
 // importing User Model
 const {User }= require('../models/User');
+
+// importing controllers
+const {sendVerificationMail} = require('./emailController');
 
 // variables
 
 // 3 days (duration of cookies)
 const maxAge = 3*24*60*60 ;
+
+// expiration of validation link 30 days
+const maxValidationDuration = "30 d";
 
 
 // function to handle validation form errors and return them
@@ -86,22 +91,29 @@ const signup_post = async (req,res)=>{
 
             // create token using the user id returned by database
             const token = createToken(user._id);
+            
+
+            // create token for validation email , token will be used in url for validation link
+             const validationToken = createTokenForEmailValidation(user.email);
+
+             console.log("le tokende validdation",validationToken);
+
+             sendVerificationMail(user.email,validationToken);
 
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
-
             // give success status and redirect to protected page
             res.status(201).redirect('/smoothies');
             
         } catch (error) {
 
-            
+            console.log(error);
 
            // if error handle signup or login errors
             const errors = handleErrors(error);
             
             // sends error http status and send errors to view
-            res.status(400).render('signup',{'errors':errors,'user':null});
+            res.status(400).render('signup',{'errors':errors});
             
         }
 
@@ -162,7 +174,7 @@ const login_post = async (req,res)=>{
        
          const errors = handleErrors(error);
        
-         res.status(400).render('login',{'errors':errors,'user':null});
+         res.status(400).render('login',{'errors':errors});
         
     }
 
@@ -186,15 +198,46 @@ const logout_get = (req,res)=>{
 
 }
 
+//verify the link from email verification
+const verify_get = (req,res)=>{
+
+        let theTokenToVerify = req.params.verify;
+
+        let {email} = jwt.decode(theTokenToVerify);
+
+        User.findOneAndUpdate({email:email}, {validated:true} ,function(err,user){
+
+            if(err){
+
+                console.log("erreur trouver user",err);
+                res.redirect('/');
+
+            }else{
+
+                console.log(user);
+                res.redirect('/login');
+
+            }            
+
+        })
+}
 
 
-
-// create token with jwt and secret sentence and expiration date
+// create token with jwt and secret sentence and expiration date for cookie
 const createToken = (id)=>{    
 
     return jwt.sign({id},process.env.SECRET,{
 
         expiresIn:maxAge,
+    });
+}
+
+
+const createTokenForEmailValidation = (email)=>{
+
+    return jwt.sign({email},process.env.SECRETVALIDATION,{
+
+        expiresIn:maxValidationDuration,
     });
 }
 
@@ -208,5 +251,6 @@ module.exports = {
     signup_post,
     login_get,
     login_post,
-    logout_get
+    logout_get,
+    verify_get
 }
