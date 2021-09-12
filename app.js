@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 
 
 //import middlewares
-const {authMiddleware ,userAuth} = require('./middlewares/authMiddleware');
+const {authMiddleware ,userAuth ,verifiedMiddleware} = require('./middlewares/authMiddleware');
 
 // import routes
 const authRoutes = require('./routes/authRoutes');
@@ -49,7 +49,7 @@ app.post('*', userAuth);
 app.get('/', (req, res) => res.render('home'));
 
 // routes for authentified users (protected with authMiddleware)
-app.get('/smoothies', authMiddleware, (req, res) => res.render('smoothies')); 
+app.get('/smoothies', [authMiddleware,verifiedMiddleware], (req, res) => res.render('smoothies')); 
 
 // all auth routes
 app.use(authRoutes.router);

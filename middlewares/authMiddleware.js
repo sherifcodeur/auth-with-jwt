@@ -47,8 +47,71 @@ const authMiddleware = (req,res,next)=>{
 
 }
 
+// middleware to protect page from non verified user - it has to be used with authmiddleware
 
-// middleware give access to user data if logged user - null if not authentified
+const verifiedMiddleware = (req,res,next)=>{
+
+    // grab token from cookies
+    const token = req.cookies.jwt;
+
+    // if token exists 
+    if(token){
+
+         // we verify authenticity of token
+         jwt.verify(token,process.env.SECRET,(err,decoded)=>{
+
+            // if error we redirect to login page
+            if(err){
+
+                console.log(err);
+
+                res.redirect('/login');
+
+            // we check if is verified user
+            }else{
+
+                let id = decoded.id;
+
+                User.findById(id,(err,user)=>{
+
+                    // err there is no user
+                    if(err){
+
+                       res.redirect('/');
+                    
+                    // there is a user
+                    } else {
+
+                        // if user is verified we give access
+                        if(user.validated){
+
+                            next();
+                        
+                        // the user exists but is not verified
+                        }else{
+
+                            res.render('verify');
+                        }
+                    }
+                })
+
+              
+            }
+
+        });
+
+        
+     // there is no token we redirect to homepage 
+     }else{
+
+        redirect('/');
+
+     }
+
+}
+
+
+// middleware give access to user data in views if logged user - null if not authentified
 const userAuth = (req,res,next)=>{
 
     
@@ -74,6 +137,10 @@ const userAuth = (req,res,next)=>{
                 let user = await User.findById(decodedToken.id);
                 res.locals.user = user;
 
+               
+
+
+
                 next();
             }
         })
@@ -94,4 +161,4 @@ const userAuth = (req,res,next)=>{
 
 // exporting 
 
-module.exports = {authMiddleware ,userAuth};
+module.exports = {authMiddleware ,userAuth,verifiedMiddleware};
