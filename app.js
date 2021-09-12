@@ -1,30 +1,35 @@
+
+// importing dependencies
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 const cookieParser = require('cookie-parser');
+
+
+//import middlewares
 const {authMiddleware ,userAuth} = require('./middlewares/authMiddleware');
 
+// import routes
 const authRoutes = require('./routes/authRoutes');
 
 
+// initializing express application
 const app = express();
 
-// middleware
+// middlewares
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cookieParser());
 
-// app.use(express.urlencoded());
 
 
-
-// view engine
+// setting up the template engine
 app.set('view engine', 'ejs');
 
-// database connection
 
 
+
+// database connection (MongoDB) and listening on port 
 const dbURI = process.env.MONGODB_URL;
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
@@ -35,7 +40,15 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCr
 
 
 // routes
-app.get('*',userAuth);
+
+// applying userAuth middleware to all get routes
+app.get('*', userAuth);
+
+// non protected routes
 app.get('/', (req, res) => res.render('home'));
+
+// routes for authentified users (protected with authMiddleware)
 app.get('/smoothies', authMiddleware, (req, res) => res.render('smoothies')); 
+
+// all auth routes
 app.use(authRoutes.router);
