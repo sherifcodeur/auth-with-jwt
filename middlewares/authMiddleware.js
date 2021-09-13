@@ -48,7 +48,6 @@ const authMiddleware = (req,res,next)=>{
 }
 
 // middleware to protect page from non verified user - it has to be used with authmiddleware
-
 const verifiedMiddleware = (req,res,next)=>{
 
     // grab token from cookies
@@ -158,7 +157,50 @@ const userAuth = (req,res,next)=>{
 
 };
 
+const visitorMiddleware = (req,res,next) =>{
+
+        // grab token
+        const token = req.cookies.jwt;
+
+        // if token exists
+        if(token){
+    
+            // check if it is the good token - if present decode the token
+            jwt.verify(token,process.env.SECRET, async (err,decodedToken)=>{
+    
+                // the token is not verified we set the user data to null
+                if(err){
+                    
+                    res.locals.user = null;
+                    next();
+    
+                // the cookie exists we grab user data in database using its id (retrieved from the decoded token)
+                }else{
+    
+                    let user = await User.findById(decodedToken.id);
+                    res.locals.user = user;
+    
+                   
+    
+    
+                    // we redirect the logged user home we don't allow him to access this
+                    res.redirect('/');
+                }
+            })
+    
+        // the token doesn't exist we set user data to null
+        }else{
+    
+            
+            res.locals.user = null;
+    
+            next();
+        }
+
+
+}
+
 
 // exporting 
 
-module.exports = {authMiddleware ,userAuth,verifiedMiddleware};
+module.exports = {authMiddleware ,userAuth,verifiedMiddleware,visitorMiddleware};
