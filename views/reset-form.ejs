@@ -1,0 +1,12 @@
+<%- include('partials/header'); -%>
+
+<form action="/reset-password" method="POST">
+  <h2>Reset Password</h2>
+  <label for="email">Email</label>
+  <input type="text" name="email" placeholder="enter email" required />
+  <div class="email error"><% if(errors){%>   <%= errors.email %> <%}%></div>
+  <button>Reset Password</button>
+  
+</form>
+
+<%- include('partials/footer'); -%>

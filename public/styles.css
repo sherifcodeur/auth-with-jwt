@@ -80,6 +80,18 @@ button{
   padding: 10px 16px;
   letter-spacing: 2px;
 }
+
+.forgot{
+  width: 360px;
+  margin: 0 auto;
+margin-top: 20px;
+}
+
+.forgot a{
+
+  color: cornflowerblue;
+  
+}
 .error{
   color: #ff0099;
   margin: 10px 2px;

@@ -22,6 +22,10 @@ router.get('/logout',authControllers.logout_get);
 
 router.get('/verify/:verify',authControllers.verify_get);
 
+router.get('/reset-password',authControllers.resetpasswordform_get);
+router.post('/reset-password',authControllers.resetpassword_post);
+router.get('/reset/:reset',authControllers.resetpassword_get);
+
 
 // exports all the routes with router
 module.exports = {router};

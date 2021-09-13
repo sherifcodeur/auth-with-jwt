@@ -10,7 +10,7 @@ const bcrypt = require('bcrypt');
 const {User }= require('../models/User');
 
 // importing controllers
-const {sendVerificationMail} = require('./emailController');
+const {sendVerificationMail, sendTemplatedMail} = require('./emailController');
 
 // variables
 
@@ -19,6 +19,8 @@ const maxAge = 3*24*60*60 ;
 
 // expiration of validation link 30 days
 const maxValidationDuration = "30 d";
+
+const maxValidationForReset = "30 m";
 
 
 // function to handle validation form errors and return them
@@ -98,7 +100,7 @@ const signup_post = async (req,res)=>{
 
              console.log("le tokende validdation",validationToken);
 
-             sendVerificationMail(user.email,validationToken);
+             sendTemplatedMail(user.email,validationToken,"email-validation");
 
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
@@ -223,6 +225,65 @@ const verify_get = (req,res)=>{
 }
 
 
+// shwows the form for reset password
+const resetpasswordform_get = (req,res)=>{
+
+    res.render('reset-form',{'errors':false});
+}
+
+// treat the form and sends email for resetting password when clicked
+const resetpassword_post = (req,res)=>{
+    
+    // we grab the email from request
+    let {email} = req.body;
+
+    // we check if exists in database
+    User.findOne({email:email},function(err,user) {
+
+        if(err){
+
+            console.log("erreur pas d user");
+        }else{
+
+            // we encode a token to be sent with the url
+            let tokenForPasswordReset = createTokenForResetLink(email);
+
+            //we send the email
+            sendTemplatedMail(user.email,tokenForPasswordReset,"reset-password");
+
+            // we need to send to some page
+
+        }
+
+    })
+
+
+    
+
+
+    
+
+
+   
+}
+
+// treat the incoming click of the link already sent by email- reset password and send it by email
+const resetpassword_get = (req,res)=>{
+
+    // we take the parameters reset form the link
+
+    // we check the validity of the token
+
+
+    // with decode values we see if it still valid in time 
+
+    // if valid in time we reset password and send it to user email
+
+    // else we say than link is no more valid and ask to send new nofication link
+
+}
+
+
 // create token with jwt and secret sentence and expiration date for cookie
 const createToken = (id)=>{    
 
@@ -233,6 +294,7 @@ const createToken = (id)=>{
 }
 
 
+// we create token for email validation -verification
 const createTokenForEmailValidation = (email)=>{
 
     return jwt.sign({email},process.env.SECRETVALIDATION,{
@@ -240,6 +302,17 @@ const createTokenForEmailValidation = (email)=>{
         expiresIn:maxValidationDuration,
     });
 }
+
+
+// we create token for reset link
+const createTokenForResetLink = (email)=>{
+
+    return jwt.sign({email},process.env.SECRETVALIDATION,{
+
+        expiresIn:maxValidationForReset,
+    });
+}
+
 
 
 
@@ -252,5 +325,8 @@ module.exports = {
     login_get,
     login_post,
     logout_get,
-    verify_get
+    verify_get,
+    resetpasswordform_get,
+    resetpassword_post,
+    resetpassword_get,
 }
