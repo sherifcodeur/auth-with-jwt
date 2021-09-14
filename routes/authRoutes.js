@@ -10,7 +10,7 @@ const router = express.Router();
 const authControllers = require('../controllers/authControllers');
 
 // importing middlewares
-const {visitorMiddleware} = require('../middlewares/authMiddleware');
+const {visitorMiddleware,authMiddleware} = require('../middlewares/authMiddleware');
 
 
 // All the routes for Auth
@@ -20,7 +20,7 @@ router.get('/login',visitorMiddleware,authControllers.login_get);
 router.post('/login',authControllers.login_post);
 router.get('/logout',authControllers.logout_get);
 
-router.get('/verify/:verify',authControllers.verify_get);
+router.get('/verify/:verify',authMiddleware,authControllers.verify_get);
 
 router.get('/reset-password',authControllers.resetpasswordform_get);
 router.post('/reset-password',authControllers.resetpassword_post);

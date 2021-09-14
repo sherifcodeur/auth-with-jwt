@@ -100,7 +100,7 @@ const signup_post = async (req,res)=>{
 
              console.log("le tokende validdation",validationToken);
 
-             sendTemplatedMail(user.email,validationToken,"email-validation");
+             sendTemplatedMail(user.email,validationToken,"verify");
 
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
@@ -155,8 +155,15 @@ const login_post = async (req,res)=>{
                 const token = createToken(user._id);
                 res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
 
-                //send succes http code and sends to protected route with user data         
-                res.status(200).render('smoothies',{'user':user});
+                //send succes http code and sends to protected route with user data 
+                if(user.validated){
+
+                    res.status(200).render('smoothies',{'user':user});
+                }else{
+
+                    res.status(200).render('verify',{'user':user});
+                }
+                
 
             // not the good password
             }else{
@@ -249,7 +256,7 @@ const resetpassword_post = (req,res)=>{
             let tokenForPasswordReset = createTokenForResetLink(email);
 
             //we send the email
-            sendTemplatedMail(user.email,tokenForPasswordReset,"reset-password");
+            sendTemplatedMail(user.email,tokenForPasswordReset,"reset");
 
             // we need to send to some page
 
