@@ -60,7 +60,7 @@ const  sendVerificationMail = async (email,validationToken)=>{
 
 
 
-const sendTemplatedMail = async (email,validationToken,typeOfEmail)=>{
+const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
 
     const transport = nodemailer.createTransport({
 
@@ -85,7 +85,7 @@ const sendTemplatedMail = async (email,validationToken,typeOfEmail)=>{
         
                 from: sender,
                 to: email,
-                subject : `email confimration for ${sender}`,
+                subject : `${topic} ${sender}`,
                 html:data, 
         
         

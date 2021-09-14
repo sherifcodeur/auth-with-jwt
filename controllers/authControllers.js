@@ -100,7 +100,7 @@ const signup_post = async (req,res)=>{
 
              console.log("le tokende validdation",validationToken);
 
-             sendTemplatedMail(user.email,validationToken,"verify");
+             sendTemplatedMail(user.email,validationToken,"verify","Verify Email Account for");
 
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
@@ -256,9 +256,10 @@ const resetpassword_post = (req,res)=>{
             let tokenForPasswordReset = createTokenForResetLink(email);
 
             //we send the email
-            sendTemplatedMail(user.email,tokenForPasswordReset,"reset");
+            sendTemplatedMail(user.email,tokenForPasswordReset,"reset","Password Reset for ");
 
             // we need to send to some page
+            res.status(204).send();
 
         }
 
