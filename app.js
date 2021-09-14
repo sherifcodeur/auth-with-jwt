@@ -6,6 +6,7 @@ const dotenv = require('dotenv').config();
 const cookieParser = require('cookie-parser');
 
 
+
 //import middlewares
 const {authMiddleware ,userAuth ,verifiedMiddleware} = require('./middlewares/authMiddleware');
 
@@ -46,7 +47,7 @@ app.get('*', userAuth);
 app.post('*', userAuth);
 
 // non protected routes
-app.get('/', (req, res) => res.render('home'));
+app.get('/', (req, res) =>{ res.render('home')} );
 
 // routes for authentified users (protected with authMiddleware)
 app.get('/smoothies', [authMiddleware,verifiedMiddleware], (req, res) => res.render('smoothies')); 

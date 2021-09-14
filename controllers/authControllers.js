@@ -106,6 +106,7 @@ const signup_post = async (req,res)=>{
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
             // give success status and redirect to protected page
+           
             res.status(201).redirect('/smoothies');
             
         } catch (error) {
