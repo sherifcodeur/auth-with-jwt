@@ -17,9 +17,10 @@ const {sendVerificationMail, sendTemplatedMail} = require('./emailController');
 // 3 days (duration of cookies)
 const maxAge = 3*24*60*60 ;
 
-// expiration of validation link 30 days
-const maxValidationDuration = "30 d";
+// expiration of VERIFICATION EMAIL link 30 days
+const maxValidationDuration = "30 s";
 
+//expiration of link for reset password
 const maxValidationForReset = "30 m";
 
 
@@ -212,23 +213,42 @@ const verify_get = (req,res)=>{
 
         let theTokenToVerify = req.params.verify;
 
-        let {email} = jwt.decode(theTokenToVerify);
+        jwt.verify(theTokenToVerify,process.env.SECRETVALIDATION,function(err,decoded){
 
-        User.findOneAndUpdate({email:email}, {validated:true} ,function(err,user){
-
+            //needs to send an error expired or invlaid link please retry
             if(err){
 
-                console.log("erreur trouver user",err);
-                res.redirect('/');
+                    console.log(err);
+                    res.redirect('/');
 
             }else{
 
-                console.log(user);
-                res.redirect('/login');
 
-            }            
+                    User.findOneAndUpdate({email:decoded.email}, {validated:true} ,function(err,user){
 
-        })
+                                if(err){
+
+                                    console.log("erreur trouver user",err);
+                                    res.redirect('/');
+
+                                }else{
+
+                                    console.log(user);
+                                    res.redirect('/login');
+
+                                }            
+
+                            })
+
+
+
+
+            }
+        });
+
+
+
+       
 }
 
 
