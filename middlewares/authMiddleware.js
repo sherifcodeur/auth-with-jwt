@@ -81,16 +81,26 @@ const verifiedMiddleware = (req,res,next)=>{
                     // there is a user
                     } else {
 
-                        // if user is verified we give access
-                        if(user.validated){
+                       if(user != null){
+                            // if user is verified we give access
+                                                    if(user.validated){
 
-                            next();
+                                                        next();
+                                                    
+                                                    // the user exists but is not verified
+                                                    }else{
+
+                                                        res.render('verify');
+                                                    }
+
+                       }else{
+
+                        res.redirect('/');
+
+
+                       }
+
                         
-                        // the user exists but is not verified
-                        }else{
-
-                            res.render('verify');
-                        }
                     }
                 })
 
@@ -171,20 +181,28 @@ const visitorMiddleware = (req,res,next) =>{
                 // the token is not verified we set the user data to null
                 if(err){
                     
+                   
                     res.locals.user = null;
                     next();
     
                 // the cookie exists we grab user data in database using its id (retrieved from the decoded token)
                 }else{
-    
-                    let user = await User.findById(decodedToken.id);
-                    res.locals.user = user;
-    
-                   
-    
-    
-                    // we redirect the logged user home we don't allow him to access this
+                    console.log("par la");
+                   let user = await User.findById(decodedToken.id);
+
+                   // didn't finnd a user
+                   if(user === null || user === undefined){
+
+                        next();
+
+                       // found user
+                   }else{
+
+                     res.locals.user = user;                    
+                     // we redirect the logged user home we don't allow him to access this
                     res.redirect('/');
+                   }
+                   
                 }
             })
     

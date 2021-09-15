@@ -113,4 +113,4 @@ const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
 
 }
 
-module.exports = {sendVerificationMail,sendTemplatedMail};
+module.exports = {sendTemplatedMail};
