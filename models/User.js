@@ -55,6 +55,20 @@ userSchema.pre('save',async function(next){
 })
 
 
+
+userSchema.pre('findOneAndUpdate', async function(next) {
+    const docToUpdate = await this.model.findOne(this.getQuery())
+  
+    if (docToUpdate.password !== this._update.password) {
+        
+        const salt = await bcrypt.genSalt();
+      const newPassword = await bcrypt.hash(this._update.password,salt);
+      this._update.password = newPassword
+    }
+    next();
+  })
+
+
 // creating model User based on the user schema
 const User = mongoose.model('user',userSchema);
 

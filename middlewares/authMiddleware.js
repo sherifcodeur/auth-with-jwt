@@ -90,7 +90,7 @@ const verifiedMiddleware = (req,res,next)=>{
                                                     // the user exists but is not verified
                                                     }else{
 
-                                                        res.render('verify');
+                                                        res.render('verify', { expressFlash: req.flash('success')});
                                                     }
 
                        }else{

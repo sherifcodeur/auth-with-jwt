@@ -4,6 +4,7 @@ const { render } = require("ejs");
 const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { nanoid } = require('nanoid');
 
 
 // importing User Model
@@ -17,8 +18,8 @@ const {sendVerificationMail, sendTemplatedMail} = require('./emailController');
 // 3 days (duration of cookies)
 const maxAge = 3*24*60*60 ;
 
-// expiration of VERIFICATION EMAIL link 30 days
-const maxValidationDuration = "30 s";
+// expiration of VERIFICATION EMAIL link 90 days
+const maxValidationDuration = "90 d";
 
 //expiration of link for reset password
 const maxValidationForReset = "30 m";
@@ -106,7 +107,7 @@ const signup_post = async (req,res)=>{
             //store token in cookie
             res.cookie('jwt',token,{httpOnly:true,maxAge:maxAge*1000});
             // give success status and redirect to protected page
-           
+            req.flash('success', 'We sent you a link to verify your Account.');
             res.status(201).redirect('/smoothies');
             
         } catch (error) {
@@ -162,8 +163,8 @@ const login_post = async (req,res)=>{
 
                     res.status(200).render('smoothies',{'user':user});
                 }else{
-
-                    res.status(200).render('verify',{'user':user});
+                    req.flash('success', 'You need to verity your account by clicking on the link sent to you.')
+                    res.status(200).render('verify',{'user':user, expressFlash: req.flash('success')});
                 }
                 
 
@@ -216,22 +217,45 @@ const verify_get = (req,res)=>{
 
         jwt.verify(theTokenToVerify,process.env.SECRETVALIDATION,function(err,decoded){
 
-            //needs to send an error expired or invlaid link please retry
+            //needs to send an error expired or invalid link please retry
             if(err){
 
-                    console.log(err);
-                    res.redirect('/');
+                    // if there is an expiration error we resend a link and show the message
+                    if(err.message == "jwt expired"){
+                        req.flash('expired', 'your link was expired - we sent you a new link please check your email account');
 
+                        let dec = jwt.decode(theTokenToVerify);
+                        console.log(dec.email);
+
+                        // create token for validation email , token will be used in url for validation link
+                        const validationToken = createTokenForEmailValidation(dec.email);
+
+                        console.log("le tokende validdation",validationToken);
+
+                        sendTemplatedMail(dec.email,validationToken,"verify","Verify Email Account for");
+
+                        res.render('verify', {expressFlash: req.flash('expired')});
+                    
+                    // there is an other type of error we redirect home
+                    }else{
+
+                        res.redirect('/');
+                    }
+                    
+                   
+            // the jwt token is valid and has been decoded
             }else{
 
-
+                    // search and update user to a validated one
                     User.findOneAndUpdate({email:decoded.email}, {validated:true} ,function(err,user){
 
+                                // user not found or other errors we redirect home
                                 if(err){
 
-                                    console.log("erreur trouver user",err);
+                                    console.log("user not found",err);
                                     res.redirect('/');
-
+                                
+                                // user found we redirect to login page the user has been validated
                                 }else{
 
                                     console.log(user);
@@ -241,14 +265,8 @@ const verify_get = (req,res)=>{
 
                             })
 
-
-
-
             }
         });
-
-
-
        
 }
 
@@ -271,16 +289,28 @@ const resetpassword_post = (req,res)=>{
         if(err){
 
             console.log("erreur pas d user");
+           
+            res.render('reset-form', errors= {email:"no account"})
         }else{
+            // a user has been found
+            if(user){
 
-            // we encode a token to be sent with the url
-            let tokenForPasswordReset = createTokenForResetLink(email);
+                console.log("on a un user")
+                // we encode a token to be sent with the url
+                let tokenForPasswordReset = createTokenForResetLink(email);
 
-            //we send the email
-            sendTemplatedMail(user.email,tokenForPasswordReset,"reset","Password Reset for ");
+                //we send the email
+                sendTemplatedMail(user.email,tokenForPasswordReset,"reset","Password Reset for ");
 
-            // we need to send to some page
-            res.status(204).send();
+                // we notify the user that the email was sent
+                res.render('reset-form', errors= {email:"email sent"})
+
+            // no user has been found
+            }else{
+
+                res.render('reset-form', errors= {email:"no account"})
+            }
+            
 
         }
 
@@ -300,8 +330,68 @@ const resetpassword_post = (req,res)=>{
 const resetpassword_get = (req,res)=>{
 
     // we take the parameters reset form the link
+    let theTokenToVerify = req.params.reset;
 
     // we check the validity of the token
+    jwt.verify(theTokenToVerify,process.env.SECRETVALIDATION,function(err,decoded){
+
+        // there is an error
+        if(err){
+
+            // the token expired we send back a message that says to try again (the user has to go on login form)
+            if(err.message == "jwt expired"){
+
+                // we notify the user that the email was sent
+                res.render('reset-form', errors= {email:"the link has expired please enter email again"})
+
+            // we send to home by precaution
+            }else{
+
+                console.log(err);
+                res.redirect('/');
+
+            }
+        // the token has been decoded
+        }else{
+
+            console.log("token valide")
+            
+            // take user email
+            console.log("email decode",decoded.email);
+
+            // generate a new password to be sent to users email without encryption
+            let generatePassword = nanoid();
+            console.log("the generated password",generatePassword);
+
+
+            // check if user exists and update password ,encrypted automatically in user schema middleware pre
+            User.findOneAndUpdate({email:decoded.email},{password:generatePassword},function(err,user){
+
+
+                if(err){
+
+                    console.log(err);
+                }else{
+
+                    console.log(user);
+                }
+
+
+            })
+
+                // if exists we generate a new password and update it in the database(after crypting it)
+
+
+                // we send email to user with  the new password , not crypted
+
+
+
+
+
+        }
+
+
+    })
 
 
     // with decode values we see if it still valid in time 

@@ -56,7 +56,7 @@ app.set('view engine', 'ejs');
 // database connection (MongoDB) and listening on port 
 const dbURI = process.env.MONGODB_URL;
 
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true,useFindAndModify: false })
   .then((result) => app.listen(3000))
   .catch((err) => console.log(err));
 
