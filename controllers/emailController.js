@@ -56,13 +56,10 @@ const ejs = require("ejs");
 
 
 // }
+let sender = process.env.APP_NAME ;
 
 
-
-
-const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
-
-    const transport = nodemailer.createTransport({
+ const transport = nodemailer.createTransport({
 
         service: "Gmail",
         auth:{
@@ -71,14 +68,24 @@ const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
         }
     });
 
-    let sender = process.env.APP_NAME ;
+
+
+
+const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
+
+   
+
+    
     let urlpart = `${process.env.APP_URL}/${typeOfEmail}/${validationToken}` ;
 
     ejs.renderFile(`./views/admin/emails/${typeOfEmail}.ejs`, { name: email ,appname: process.env.APP_NAME,url:urlpart }, function (err, data) {
 
+
         if(err){
 
             console.log(err);
+
+
         }else{
 
             let mailOptions = {
@@ -113,4 +120,48 @@ const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
 
 }
 
-module.exports = {sendTemplatedMail};
+
+const sendNewEmail = async (email,newpassword,typeOfEmail,topic)=>{
+
+    ejs.renderFile(`./views/admin/emails/${typeOfEmail}.ejs`, { email: email ,appname: process.env.APP_NAME,password:newpassword }, function (err, data) {
+
+
+
+        if(err){
+
+            console.log(err);
+
+
+        }else{
+
+            let mailOptions = {
+        
+                from: sender,
+                to: email,
+                subject : `${topic} ${sender}`,
+                html:data, 
+        
+        
+            }
+
+            transport.sendMail(mailOptions,function(err,response){
+
+                if(err){
+        
+                    console.log("sending email error",err)
+                    
+                }else{
+        
+                    console.log("message sent");
+                }
+        
+        
+            });
+
+        }
+
+    })
+
+}
+
+module.exports = {sendTemplatedMail,sendNewEmail};

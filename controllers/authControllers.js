@@ -11,7 +11,7 @@ const { nanoid } = require('nanoid');
 const {User }= require('../models/User');
 
 // importing controllers
-const {sendVerificationMail, sendTemplatedMail} = require('./emailController');
+const {sendNewEmail, sendTemplatedMail} = require('./emailController');
 
 // variables
 
@@ -371,22 +371,19 @@ const resetpassword_get = (req,res)=>{
                 if(err){
 
                     console.log(err);
+                    res.redirect('/');
                 }else{
 
+                    // user updated sends back to login page with success message & send email with new password not crypted
+
                     console.log(user);
+                    sendNewEmail(decoded.email,generatePassword,"emailreset",`New password for ${process.env.APP_NAME}`);
+
+                    res.render('login',errors={password:"New password sent by email !!"});
                 }
 
 
             })
-
-                // if exists we generate a new password and update it in the database(after crypting it)
-
-
-                // we send email to user with  the new password , not crypted
-
-
-
-
 
         }
 
