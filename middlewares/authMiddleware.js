@@ -167,6 +167,8 @@ const userAuth = (req,res,next)=>{
 
 };
 
+
+// to protect pages from already authentified users
 const visitorMiddleware = (req,res,next) =>{
 
         // grab token

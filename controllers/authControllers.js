@@ -21,8 +21,8 @@ const maxAge = 3*24*60*60 ;
 // expiration of VERIFICATION EMAIL link 90 days
 const maxValidationDuration = "90 d";
 
-//expiration of link for reset password
-const maxValidationForReset = "30 m";
+//expiration of link for reset password 10 days
+const maxValidationForReset = "10 d";
 
 
 // function to handle validation form errors and return them

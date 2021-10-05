@@ -14,18 +14,18 @@ const userSchema = new Schema({
 
     email : {
         type:String,
-        required:[true,'oui c requies roger'],
+        required:[true,'email is required'],
         unique:true,
         lowercase:true,
-        validate:[isEmail,'entre un email valide mec']
+        validate:[isEmail,'Please enter a valid email']
 
     },
 
     password : {
 
         type:String,
-        required:[true,"faut rentrer un pass"],
-        minlength :[6,"pas moins de 6 carateres"]
+        required:[true,"Please enter a password"],
+        minlength :[6,"password not less than 6 characters"]
 
     },
 
@@ -44,7 +44,7 @@ const userSchema = new Schema({
 );
 
 
-//mongoose hook fired before user saved in database
+//mongoose hook fired before user saved in database - we encrypt the password
 userSchema.pre('save',async function(next){
 
     const salt = await bcrypt.genSalt();
@@ -55,7 +55,7 @@ userSchema.pre('save',async function(next){
 })
 
 
-
+// mongoose hook fired before findOneAndUpdate
 userSchema.pre('findOneAndUpdate', async function(next) {
     const docToUpdate = await this.model.findOne(this.getQuery())
   
