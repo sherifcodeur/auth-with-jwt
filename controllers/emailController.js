@@ -4,58 +4,6 @@ const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 
 
-// const  sendVerificationMail = async (email,validationToken)=>{
-
-
-//     const transport = nodemailer.createTransport({
-
-//         service: "Gmail",
-//         auth:{
-//             user: process.env.EMAIL_USER,
-//             pass: process.env.EMAIL_PASSWORD,
-//         }
-//     });
-
-
-//     let sender = process.env.APP_NAME ;
-
-//     let mailOptions = {
-
-//         from: sender,
-//         to: email,
-//         subject : `email confimration for ${sender}`,
-//         html:`Click <a href="${process.env.APP_URL}/verify/${validationToken}"> here </a> to validate your email . Thanks` 
-
-
-//     }
-
-
-//      await transport.sendMail(mailOptions,function(err,response){
-
-//         if(err){
-
-//             console.log("sending email error",err)
-//         }else{
-
-//             console.log("message sent");
-//         }
-
-
-//     });
-
-
-   
-
-
-
-
-
-
-
-
-
-
-// }
 let sender = process.env.APP_NAME ;
 
 
@@ -121,47 +69,47 @@ const sendTemplatedMail = async (email,validationToken,typeOfEmail,topic)=>{
 }
 
 
-const sendNewEmail = async (email,newpassword,typeOfEmail,topic)=>{
+// const sendNewEmail = async (email,newpassword,typeOfEmail,topic)=>{
 
-    ejs.renderFile(`./views/admin/emails/${typeOfEmail}.ejs`, { email: email ,appname: process.env.APP_NAME,password:newpassword }, function (err, data) {
-
-
-
-        if(err){
-
-            console.log(err);
+//     ejs.renderFile(`./views/admin/emails/${typeOfEmail}.ejs`, { email: email ,appname: process.env.APP_NAME,password:newpassword }, function (err, data) {
 
 
-        }else{
 
-            let mailOptions = {
+//         if(err){
+
+//             console.log(err);
+
+
+//         }else{
+
+//             let mailOptions = {
         
-                from: sender,
-                to: email,
-                subject : `${topic} ${sender}`,
-                html:data, 
+//                 from: sender,
+//                 to: email,
+//                 subject : `${topic} ${sender}`,
+//                 html:data, 
         
         
-            }
+//             }
 
-            transport.sendMail(mailOptions,function(err,response){
+//             transport.sendMail(mailOptions,function(err,response){
 
-                if(err){
+//                 if(err){
         
-                    console.log("sending email error",err)
+//                     console.log("sending email error",err)
                     
-                }else{
+//                 }else{
         
-                    console.log("message sent");
-                }
+//                     console.log("message sent");
+//                 }
         
         
-            });
+//             });
 
-        }
+//         }
 
-    })
+//     })
 
-}
+// }
 
-module.exports = {sendTemplatedMail,sendNewEmail};
+module.exports = {sendTemplatedMail};

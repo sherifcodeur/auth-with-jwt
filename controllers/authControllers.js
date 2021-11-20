@@ -1,10 +1,9 @@
 
 // importing expternal dependencies
-const { render } = require("ejs");
+
 const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { nanoid } = require('nanoid');
 const crypto = require('crypto')
 
 
@@ -12,7 +11,7 @@ const crypto = require('crypto')
 const {User }= require('../models/User');
 
 // importing controllers
-const {sendNewEmail, sendTemplatedMail} = require('./emailController');
+const {sendTemplatedMail} = require('./emailController');
 
 // variables
 
