@@ -22,9 +22,6 @@ const maxAge = 3*24*60*60 ;
 // expiration of VERIFICATION EMAIL link 90 days
 const maxValidationDuration = "90 d";
 
-//expiration of link for reset password 10 days
-// const maxValidationForReset = "10 d";
-
 
 // function to handle validation form errors and return them
 const handleErrors = (err)=>{
@@ -272,13 +269,13 @@ const verify_get = (req,res)=>{
 }
 
 
-// shwows the form for reset password
+// shwows the form sending email reset link
 const resetpasswordform_get = (req,res)=>{
 
     res.render('reset-form',{'errors':false});
 }
 
-// treat the form and sends email for resetting password when clicked
+// send email for resetting email
 const resetpassword_post = async (req,res)=>{
     
     // we grab the email from request
@@ -291,7 +288,8 @@ const resetpassword_post = async (req,res)=>{
 
             console.log("erreur pas d user");
            
-            res.render('reset-form', errors= {email:"no account"})
+            // the error don't say that there is no user to not give info on database
+            res.render('reset-form', errors= {email:"servor error please try later"})
         }else{
             // a user has been found
             if(user){
@@ -312,7 +310,8 @@ const resetpassword_post = async (req,res)=>{
             // no user has been found
             }else{
 
-                res.render('reset-form', errors= {email:"no account"})
+                // the error don't say that there is no user to not give info on database
+                res.render('reset-form', errors= {email:"servor error"})
             }
             
 
@@ -347,9 +346,8 @@ const resetpassword = async (req,res,next)=>{
 
         if(!user){
 
-         //res.render('reset-form', errors= {email:"the link has expired please enter email again"})
-
-          //return next(new ErrorResponse("invalid link",400))
+         res.render('reset-form', errors= {email:"the link has expired please enter email again"})
+         
         }
 
         user.password = req.body.password
@@ -362,13 +360,16 @@ const resetpassword = async (req,res,next)=>{
     }catch{
 
         console.log("erreur")
+
+        res.render('reset-form', errors= {email:"servor error try again later"})
+        
     }
 
 }
 
 
 // this form allows the user to enter the new password
-const resetpasswordform = (req,res,next)=>{
+const resetpasswordform = (req,res)=>{
 
     res.render('update-password',{'errors':false,'reset':req.params.reset});
 

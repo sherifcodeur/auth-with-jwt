@@ -75,6 +75,7 @@ userSchema.pre('findOneAndUpdate', async function(next) {
   })
 
 
+  // create a reset password token and set the user resetpasswordtoken and resetpasswordexpire
   userSchema.methods.getResetPasswordToken = function(){
 
     // we created a reset token randomly
