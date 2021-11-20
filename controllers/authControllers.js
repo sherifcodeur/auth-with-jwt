@@ -5,6 +5,7 @@ const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { nanoid } = require('nanoid');
+const crypto = require('crypto')
 
 
 // importing User Model
@@ -278,13 +279,13 @@ const resetpasswordform_get = (req,res)=>{
 }
 
 // treat the form and sends email for resetting password when clicked
-const resetpassword_post = (req,res)=>{
+const resetpassword_post = async (req,res)=>{
     
     // we grab the email from request
     let {email} = req.body;
 
     // we check if exists in database
-    User.findOne({email:email},function(err,user) {
+    User.findOne({email:email},async function(err,user) {
 
         if(err){
 
@@ -356,10 +357,20 @@ const resetpassword = async (req,res,next)=>{
         user.resetPasswordExpire = undefined;
         await user.save();
 
+        res.redirect('/login')
+
     }catch{
 
-        console.log(err)
+        console.log("erreur")
     }
+
+}
+
+
+// this form allows the user to enter the new password
+const resetpasswordform = (req,res,next)=>{
+
+    res.render('update-password',{'errors':false,'reset':req.params.reset});
 
 }
 
@@ -401,5 +412,6 @@ module.exports = {
     verify_get,
     resetpasswordform_get,
     resetpassword_post,
-    resetpassword_get,
+    resetpassword,
+    resetpasswordform,
 }
