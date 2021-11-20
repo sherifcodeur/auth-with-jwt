@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const {isEmail} = require('validator');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 
 // creating user Schema
@@ -33,7 +34,12 @@ const userSchema = new Schema({
 
         type:Boolean,
         default:false,
-    }
+    },
+
+    resetPasswordToken:String,
+
+    resetPasswordExpire:Date,
+    
 
 },
     
@@ -67,6 +73,22 @@ userSchema.pre('findOneAndUpdate', async function(next) {
     }
     next();
   })
+
+
+  userSchema.methods.getResetPasswordToken = function(){
+
+    // we created a reset token randomly
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // we generate a hash using the previous resetToken and save it in db
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    // we save the expiration date 10 minutes from now
+    this.resetPasswordExpire = Date.now() + 30 * (60*1000) ; // thirty minutes
+
+    // we return the resetToken
+    return resetToken;
+}
 
 
 // creating model User based on the user schema

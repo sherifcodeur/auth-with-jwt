@@ -22,7 +22,7 @@ const maxAge = 3*24*60*60 ;
 const maxValidationDuration = "90 d";
 
 //expiration of link for reset password 10 days
-const maxValidationForReset = "10 d";
+// const maxValidationForReset = "10 d";
 
 
 // function to handle validation form errors and return them
@@ -296,11 +296,14 @@ const resetpassword_post = (req,res)=>{
             if(user){
 
                 console.log("on a un user")
-                // we encode a token to be sent with the url
-                let tokenForPasswordReset = createTokenForResetLink(email);
+                // we encode a token to be sent with the url and create date limit and add it to user
+                const resetToken = user.getResetPasswordToken();
+
+                // we save user in database
+                await user.save()                
 
                 //we send the email
-                sendTemplatedMail(user.email,tokenForPasswordReset,"reset","Password Reset for ");
+                sendTemplatedMail(user.email,resetToken,"reset","Password Reset for ");
 
                 // we notify the user that the email was sent
                 res.render('reset-form', errors= {email:"email sent"})
@@ -317,85 +320,46 @@ const resetpassword_post = (req,res)=>{
     })
 
 
-    
-
-
-    
-
-
    
 }
 
-// treat the incoming click of the link already sent by email- reset password and send it by email
-const resetpassword_get = (req,res)=>{
+// treat the new password coming from the password reset form and the token given by email
+const resetpassword = async (req,res,next)=>{
 
     // we take the parameters reset form the link
-    let theTokenToVerify = req.params.reset;
+    const receivedToken = req.params.reset;
 
     // we check the validity of the token
-    jwt.verify(theTokenToVerify,process.env.SECRETVALIDATION,function(err,decoded){
 
-        // there is an error
-        if(err){
+    const resetPasswordToken = crypto.createHash("sha256").update(receivedToken).digest("hex");
 
-            // the token expired we send back a message that says to try again (the user has to go on login form)
-            if(err.message == "jwt expired"){
+      // on check if there is a user in database with this token 
 
-                // we notify the user that the email was sent
-                res.render('reset-form', errors= {email:"the link has expired please enter email again"})
+      try {
 
-            // we send to home by precaution
-            }else{
+         const user = await User.findOne({
+           
+          resetPasswordToken,
+          resetPasswordExpire: { $gt: Date.now() }
+        
+        })
 
-                console.log(err);
-                res.redirect('/');
+        if(!user){
 
-            }
-        // the token has been decoded
-        }else{
+         //res.render('reset-form', errors= {email:"the link has expired please enter email again"})
 
-            console.log("token valide")
-            
-            // take user email
-            console.log("email decode",decoded.email);
-
-            // generate a new password to be sent to users email without encryption
-            let generatePassword = nanoid();
-            console.log("the generated password",generatePassword);
-
-
-            // check if user exists and update password ,encrypted automatically in user schema middleware pre
-            User.findOneAndUpdate({email:decoded.email},{password:generatePassword},function(err,user){
-
-
-                if(err){
-
-                    console.log(err);
-                    res.redirect('/');
-                }else{
-
-                    // user updated sends back to login page with success message & send email with new password not crypted
-
-                    console.log(user);
-                    sendNewEmail(decoded.email,generatePassword,"emailreset",`New password for ${process.env.APP_NAME}`);
-
-                    res.render('login',errors={password:"New password sent by email !!"});
-                }
-
-
-            })
-
+          //return next(new ErrorResponse("invalid link",400))
         }
 
+        user.password = req.body.password
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
 
-    })
+    }catch{
 
-
-    // with decode values we see if it still valid in time 
-
-    // if valid in time we reset password and send it to user email
-
-    // else we say than link is no more valid and ask to send new nofication link
+        console.log(err)
+    }
 
 }
 
@@ -420,14 +384,7 @@ const createTokenForEmailValidation = (email)=>{
 }
 
 
-// we create token for reset link
-const createTokenForResetLink = (email)=>{
 
-    return jwt.sign({email},process.env.SECRETVALIDATION,{
-
-        expiresIn:maxValidationForReset,
-    });
-}
 
 
 
