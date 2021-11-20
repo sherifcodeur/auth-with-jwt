@@ -98,7 +98,7 @@ const signup_post = async (req,res)=>{
             // create token for validation email , token will be used in url for validation link
              const validationToken = createTokenForEmailValidation(user.email);
 
-             console.log("le tokende validdation",validationToken);
+             //console.log("le tokende validdation",validationToken);
 
              sendTemplatedMail(user.email,validationToken,"verify","Verify Email Account for");
 
@@ -305,13 +305,13 @@ const resetpassword_post = async (req,res)=>{
                 sendTemplatedMail(user.email,resetToken,"reset","Password Reset for ");
 
                 // we notify the user that the email was sent
-                res.render('reset-form', errors= {email:"email sent"})
+                res.render('reset-form', errors= {email:"email sent -> check your email"})
 
             // no user has been found
             }else{
 
-                // the error don't say that there is no user to not give info on database
-                res.render('reset-form', errors= {email:"servor error"})
+                // error the email doesn't exists 
+                res.render('reset-form', errors= {email:"email error - try again"})
             }
             
 
