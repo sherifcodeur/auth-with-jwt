@@ -36,9 +36,14 @@ const userSchema = new Schema({
         default:false,
     },
 
+    // reset password
     resetPasswordToken:String,
-
     resetPasswordExpire:Date,
+
+
+    // verify password
+    // verifyToken:String,
+    // verifyTokenExpire:Date,
     
 
 },
@@ -61,7 +66,7 @@ userSchema.pre('save',async function(next){
 })
 
 
-// mongoose hook fired before findOneAndUpdate
+// mongoose hook fired before findOneAndUpdate we update the password if it is not the same as previous
 userSchema.pre('findOneAndUpdate', async function(next) {
     const docToUpdate = await this.model.findOne(this.getQuery())
   
