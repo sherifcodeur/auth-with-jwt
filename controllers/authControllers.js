@@ -1,17 +1,17 @@
 
 // importing expternal dependencies
-const { render } = require("ejs");
+
 const { JsonWebTokenError } = require("jsonwebtoken");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { nanoid } = require('nanoid');
+const crypto = require('crypto')
 
 
 // importing User Model
 const {User }= require('../models/User');
 
 // importing controllers
-const {sendNewEmail, sendTemplatedMail} = require('./emailController');
+const {sendTemplatedMail} = require('./emailController');
 
 // variables
 
@@ -20,9 +20,6 @@ const maxAge = 3*24*60*60 ;
 
 // expiration of VERIFICATION EMAIL link 90 days
 const maxValidationDuration = "90 d";
-
-//expiration of link for reset password 10 days
-const maxValidationForReset = "10 d";
 
 
 // function to handle validation form errors and return them
@@ -100,7 +97,7 @@ const signup_post = async (req,res)=>{
             // create token for validation email , token will be used in url for validation link
              const validationToken = createTokenForEmailValidation(user.email);
 
-             console.log("le tokende validdation",validationToken);
+             //console.log("le tokende validdation",validationToken);
 
              sendTemplatedMail(user.email,validationToken,"verify","Verify Email Account for");
 
@@ -271,131 +268,109 @@ const verify_get = (req,res)=>{
 }
 
 
-// shwows the form for reset password
+// shwows the form sending email reset link
 const resetpasswordform_get = (req,res)=>{
 
     res.render('reset-form',{'errors':false});
 }
 
-// treat the form and sends email for resetting password when clicked
-const resetpassword_post = (req,res)=>{
+// send email for resetting email
+const resetpassword_post = async (req,res)=>{
     
     // we grab the email from request
     let {email} = req.body;
 
     // we check if exists in database
-    User.findOne({email:email},function(err,user) {
+    User.findOne({email:email},async function(err,user) {
 
         if(err){
 
             console.log("erreur pas d user");
            
-            res.render('reset-form', errors= {email:"no account"})
+            // the error don't say that there is no user to not give info on database
+            res.render('reset-form', errors= {email:"servor error please try later"})
         }else{
             // a user has been found
             if(user){
 
                 console.log("on a un user")
-                // we encode a token to be sent with the url
-                let tokenForPasswordReset = createTokenForResetLink(email);
+                // we encode a token to be sent with the url and create date limit and add it to user
+                const resetToken = user.getResetPasswordToken();
+
+                // we save user in database
+                await user.save()                
 
                 //we send the email
-                sendTemplatedMail(user.email,tokenForPasswordReset,"reset","Password Reset for ");
+                sendTemplatedMail(user.email,resetToken,"reset","Password Reset for ");
 
                 // we notify the user that the email was sent
-                res.render('reset-form', errors= {email:"email sent"})
+                res.render('reset-form', errors= {email:"email sent -> check your email"})
 
             // no user has been found
             }else{
 
-                res.render('reset-form', errors= {email:"no account"})
+                // error the email doesn't exists 
+                res.render('reset-form', errors= {email:"email error - try again"})
             }
             
 
         }
 
     })
-
-
-    
-
-
-    
 
 
    
 }
 
-// treat the incoming click of the link already sent by email- reset password and send it by email
-const resetpassword_get = (req,res)=>{
+// treat the new password coming from the password reset form and the token given by email
+const resetpassword = async (req,res,next)=>{
 
     // we take the parameters reset form the link
-    let theTokenToVerify = req.params.reset;
+    const receivedToken = req.params.reset;
 
     // we check the validity of the token
-    jwt.verify(theTokenToVerify,process.env.SECRETVALIDATION,function(err,decoded){
 
-        // there is an error
-        if(err){
+    const resetPasswordToken = crypto.createHash("sha256").update(receivedToken).digest("hex");
 
-            // the token expired we send back a message that says to try again (the user has to go on login form)
-            if(err.message == "jwt expired"){
+      // on check if there is a user in database with this token 
 
-                // we notify the user that the email was sent
-                res.render('reset-form', errors= {email:"the link has expired please enter email again"})
+      try {
 
-            // we send to home by precaution
-            }else{
+         const user = await User.findOne({
+           
+          resetPasswordToken,
+          resetPasswordExpire: { $gt: Date.now() }
+        
+        })
 
-                console.log(err);
-                res.redirect('/');
+        if(!user){
 
-            }
-        // the token has been decoded
-        }else{
-
-            console.log("token valide")
-            
-            // take user email
-            console.log("email decode",decoded.email);
-
-            // generate a new password to be sent to users email without encryption
-            let generatePassword = nanoid();
-            console.log("the generated password",generatePassword);
-
-
-            // check if user exists and update password ,encrypted automatically in user schema middleware pre
-            User.findOneAndUpdate({email:decoded.email},{password:generatePassword},function(err,user){
-
-
-                if(err){
-
-                    console.log(err);
-                    res.redirect('/');
-                }else{
-
-                    // user updated sends back to login page with success message & send email with new password not crypted
-
-                    console.log(user);
-                    sendNewEmail(decoded.email,generatePassword,"emailreset",`New password for ${process.env.APP_NAME}`);
-
-                    res.render('login',errors={password:"New password sent by email !!"});
-                }
-
-
-            })
-
+         res.render('reset-form', errors= {email:"the link has expired please enter email again"})
+         
         }
 
+        user.password = req.body.password
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
 
-    })
+        res.redirect('/login')
+
+    }catch{
+
+        console.log("erreur")
+
+        res.render('reset-form', errors= {email:"servor error try again later"})
+        
+    }
+
+}
 
 
-    // with decode values we see if it still valid in time 
+// this form allows the user to enter the new password
+const resetpasswordform = (req,res)=>{
 
-    // if valid in time we reset password and send it to user email
-
-    // else we say than link is no more valid and ask to send new nofication link
+    res.render('update-password',{'errors':false,'reset':req.params.reset});
 
 }
 
@@ -420,14 +395,7 @@ const createTokenForEmailValidation = (email)=>{
 }
 
 
-// we create token for reset link
-const createTokenForResetLink = (email)=>{
 
-    return jwt.sign({email},process.env.SECRETVALIDATION,{
-
-        expiresIn:maxValidationForReset,
-    });
-}
 
 
 
@@ -444,5 +412,6 @@ module.exports = {
     verify_get,
     resetpasswordform_get,
     resetpassword_post,
-    resetpassword_get,
+    resetpassword,
+    resetpasswordform,
 }

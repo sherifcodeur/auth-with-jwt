@@ -24,7 +24,11 @@ router.get('/verify/:verify',authMiddleware,authControllers.verify_get);
 
 router.get('/reset-password',authControllers.resetpasswordform_get);
 router.post('/reset-password',authControllers.resetpassword_post);
-router.get('/reset/:reset',authControllers.resetpassword_get);
+
+
+router.get('/reset/:reset',authControllers.resetpasswordform);
+router.post('/reset/:reset',authControllers.resetpassword);
+
 
 
 // exports all the routes with router
